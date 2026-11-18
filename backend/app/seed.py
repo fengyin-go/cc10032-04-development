@@ -3,6 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.seed_late import (
+    BACKFILL_OVERRIDES,
+    LATE_HANDLER_OVERRIDES,
+    LATE_SEED_ROWS,
+    WATERMARK_OVERRIDES,
+)
+
 SEED_ROWS: dict[str, list[dict[str, Any]]] = {
     "stream_source": [{'id': 1,
   'status': '草稿',
@@ -159,7 +166,7 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '空转时长': '水位追踪样例2',
   '溢出状态': '水位追踪样例2'},
  {'id': 3,
-  'status': '溢出',
+  'status': '空转',
   'pending': False,
   'abnormal': False,
   '水位名称': '水位追踪样例3',
@@ -168,7 +175,18 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '事件时间': '2026-09-03',
   '延迟阈值': '水位追踪样例3',
   '空转时长': '水位追踪样例3',
-  '溢出状态': '水位追踪样例3'}],
+  '溢出状态': '水位追踪样例3'},
+ {'id': 4,
+  'status': '正常',
+  'pending': False,
+  'abnormal': False,
+  '水位名称': '水位追踪样例4',
+  '数据源': '水位追踪样例4',
+  '当前水位': '水位追踪样例4',
+  '事件时间': '2026-09-03',
+  '延迟阈值': '水位追踪样例4',
+  '空转时长': '水位追踪样例4',
+  '溢出状态': '水位追踪样例4'}],
     "alert_policy": [{'id': 1,
   'status': '草稿',
   'pending': True,
@@ -531,7 +549,18 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '旁路输出': '迟到处理样例3',
   '计数方式': '迟到处理样例3',
   '阈值百分比': '迟到处理样例3',
-  '标记字段': '迟到处理样例3'}],
+  '标记字段': '迟到处理样例3'},
+ {'id': 4,
+  'status': '已启用',
+  'pending': False,
+  'abnormal': False,
+  '策略名称': '迟到处理样例4',
+  '允许延迟': '迟到处理样例4',
+  '迟到动作': '迟到处理样例4',
+  '旁路输出': '迟到处理样例4',
+  '计数方式': '迟到处理样例4',
+  '阈值百分比': '迟到处理样例4',
+  '标记字段': '迟到处理样例4'}],
     "task_topology": [{'id': 1,
   'status': '草稿',
   'pending': True,
@@ -764,3 +793,15 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '结果验证': '回放引擎样例3',
   '进度': '回放引擎样例3'}],
 }
+
+# 水位记录/迟到策略/补数任务改成可计算的数值，供迟到链路直接读取；
+# 迟到旁路相关表由 seed_late 提供。
+def _apply_overrides(table: str, overrides: dict[int, dict[str, Any]]) -> None:
+    for row in SEED_ROWS[table]:
+        row.update(overrides.get(int(row.get("id", 0)), {}))
+
+
+_apply_overrides("watermark_track", WATERMARK_OVERRIDES)
+_apply_overrides("late_handler", LATE_HANDLER_OVERRIDES)
+_apply_overrides("backfill_job", BACKFILL_OVERRIDES)
+SEED_ROWS.update(LATE_SEED_ROWS)

@@ -71,6 +71,35 @@ npm run dev
 | 调试追踪 | `debug_trace` | 调试会话 | 会话名称、目标算子、采样数据 |
 | 聚合落库 | `aggregate_sink` | 聚合任务 | 任务名称、源指标集、聚合粒度 |
 
+## 迟到旁路链路
+
+从水位记录到补数任务的一条完整链路，接口挂在 `/api/late-bypass` 下：
+
+| 接口 | 作用 |
+| --- | --- |
+| `GET /watermarks` | 水位页面：迟到分布摘要 + 旁路版本/作业来源关系 |
+| `GET /watermarks/{id}/distribution` | 4 号水位详情：迟到分布、两种口径条件范围、阈值规则命中 |
+| `POST /versions` | 从水位记录识别迟到事件并冻结一个旁路版本（按 request_id / 水位口径幂等） |
+| `POST /versions/submit-group` | 当前水位冻结 + 回看上一水位合并补报两种口径同时提交，整组只落一次 |
+| `POST /versions/{id}/confirm` | 确定可执行补数范围，生成待执行补数作业（范围必须覆盖水位区间） |
+| `POST /versions/{id}/reopen` | 故障重开：沿用同一口径与范围，重复请求只记一次 |
+| `GET /jobs` | 补数任务页面：每个旁路版本对应的作业、覆盖事件范围、完成状态 |
+| `POST /jobs/{id}/execute` | 读取迟到旁路数据生成回执，回执保留被覆盖的事件范围 |
+| `GET /receipts` | 作业回执（按版本 / 作业过滤） |
+| `GET /audit` | 阈值核对：按水位区间核对旁路数据与补数清单 |
+| `GET /todos` | 其他页面（水位、补数、迟到策略）的迟到旁路待办 |
+
+关键约束：
+
+- 同一事件重复到达只算一次，且只能归属一个旁路版本；已旁路事件不会进入第二个补数范围。
+- 同一 `request_id` / 同一（水位区间 + 口径）重复提交返回原版本，不新增记录。
+- 冻结版本、确认范围、写回执都在 `store.lock` 内整组提交，失败整组回退（同口径可重试）。
+- 两种口径各自成版本并写入 `late_bypass_current`，确认后只有一份标记为可执行。
+- 水位记录、补数作业、回执之间通过 `水位记录ID / 旁路版本ID / 作业ID` 保留来源关系。
+
+前端入口：`/late-bypass/watermark/:id`（水位迟到分布）、`/late-bypass/backfill`
+（迟到补数任务）、`/late-bypass/audit`（阈值核对），水位/补数/迟到策略列表也会显示待办。
+
 ## 约定
 
 - 全部模块共享`frontend/src/views/WorkbenchView.vue|tsx`和一套资源路由。

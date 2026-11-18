@@ -70,3 +70,28 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .analysis-chart { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 12px 0; }
 .analysis-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--brand); min-width: 24px; position: relative; transition: height 0.4s; }
 .analysis-bar span { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* 迟到旁路链路页面 */
+.stat-value.small { font-size: 14px; }
+.panel { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
+.panel h3 { margin: 0 0 8px; font-size: 14px; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 8px 0; }
+.detail-grid span { display: block; font-size: 12px; }
+.detail-grid strong { font-size: 13px; }
+.scope-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+.scope-grid .panel { flex: 1; min-width: 320px; margin: 12px 0; }
+.scope-card h3 { display: flex; justify-content: space-between; }
+.event-list summary { cursor: pointer; font-size: 12px; color: var(--brand); margin: 6px 0; }
+.event-list .data-table { margin-top: 6px; }
+.muted { color: var(--muted); font-size: 12px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.notice-text { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 6px; padding: 8px 12px; font-size: 13px; }
+.hit { color: #b42318; }
+.miss { color: #027a48; }
+.ok-text { color: #027a48; }
+.warn-text { color: #b54708; }
+.highlight { background: #eff6ff; }
+.todo-list { list-style: none; margin: 0; padding: 0; }
+.todo-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+.todo-list li:last-child { border-bottom: none; }
+.todo-tag { font-size: 11px; border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; color: var(--muted); }

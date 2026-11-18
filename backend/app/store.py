@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import copy
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -89,6 +90,18 @@ class Store:
         self._channels: dict[str, DataChannelEvent] = {}
         # 失败恢复记录：recovery_id → FailureRecovery
         self._failures: dict[str, FailureRecovery] = {}
+        # 迟到旁路链路的事务锁：冻结版本、生成作业、写回执必须整组提交/整组回退。
+        self.lock = threading.RLock()
+
+    def reset(self) -> None:
+        """把内存仓库恢复成初始示例数据（测试和本地重演用）。"""
+        with self.lock:
+            self._tables = {
+                name: [copy.deepcopy(row) for row in rows]
+                for name, rows in SEED_ROWS.items()
+            }
+            self._channels.clear()
+            self._failures.clear()
 
     # ---- 跨模块数据通道 ----
 
@@ -216,8 +229,19 @@ class Store:
 
     # ---- 基础 CRUD ----
 
+    # 迟到旁路链路的内部表不单独出现在运营概览和导航里。
+    INTERNAL_TABLES = {
+        "watermark_event",
+        "late_bypass",
+        "late_submission",
+        "late_bypass_event",
+        "late_bypass_current",
+        "backfill_receipt",
+        "late_todo",
+    }
+
     def module_names(self) -> list[str]:
-        return sorted(self._tables)
+        return sorted(name for name in self._tables if name not in self.INTERNAL_TABLES)
 
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])

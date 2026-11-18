@@ -34,7 +34,11 @@ def health() -> dict[str, object]:
 @app.get("/api/overview")
 def overview() -> dict[str, object]:
     """运营概览：把各业务模块的待处理量汇总成看板卡片。"""
-    return store.overview()
+    from app.services.late_bypass import summary as late_summary
+
+    payload = store.overview()
+    payload["late_bypass"] = late_summary()
+    return payload
 
 
 # ---- 数据通道 API ----
